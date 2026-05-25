@@ -121,7 +121,7 @@ sudo apt clean
 
 ### 4.2 内存管理
 
-hybrid-auto-engine 实测显存占用约 8.3GB（不含系统占用），16GB 卡很从容。12GB 和 8GB 卡需注意限制 vllm 占用：
+hybrid-auto-engine 实测显存占用约 8.3GB（不含系统占用），16GB 和 12GB 卡很从容。8GB 卡需注意限制 vllm 占用或使用 pipeline 后端：
 
 ```bash
 # 查看显存使用
@@ -131,8 +131,11 @@ print(f'Allocated: {torch.cuda.memory_allocated(0)/1e9:.1f} GB')
 print(f'Reserved:  {torch.cuda.memory_reserved(0)/1e9:.1f} GB')
 "
 
+# 限制 vllm 显存占用（针对 8GB 显卡推荐）
+export VLLM_GPU_MEMORY_UTILIZATION=0.4
+
 # 如果 API 服务 OOM，降低并发
-export MINERU_MAX_CONCURRENT_REQUESTS=1
+export MINERU_API_MAX_CONCURRENT_REQUESTS=1
 ```
 
 ### 4.3 WSL2 配置文件
@@ -189,14 +192,16 @@ pkill -f mineru-api
 
 ### 5.3 开机自启
 
-编辑 `/etc/wsl.conf`：
+编辑 `/etc/wsl.conf`（注意：`boot.command` 以 root 运行，`$USER` 在 root 环境下未定义，需要把用户名写死）：
 
 ```bash
-sudo sh -c 'cat > /etc/wsl.conf << EOF
+sudo tee /etc/wsl.conf > /dev/null << EOF
 [boot]
-command = /bin/su - $USER -c "cd $HOME/mineru_stable && .venv/bin/nohup mineru-api --host 0.0.0.0 --port 8000 > $HOME/mineru_api.log 2>&1 &"
-EOF'
+command = /bin/su - $USER -c "cd \$HOME/mineru_stable && nohup .venv/bin/mineru-api --host 0.0.0.0 --port 8000 > \$HOME/mineru_api.log 2>&1 &"
+EOF
 ```
+
+> 上面利用外层 shell 在写入文件时把 `$USER` 替换为当前用户名；`\$HOME` 保留原样，留到 `su -` 启动子 shell 时再展开。
 
 ---
 
@@ -211,7 +216,7 @@ EOF'
 4. **是不是掉到 CPU 了？** → 检查 `torch.cuda.is_available()`
 5. **是不是 ROCm 升级了？** → MIOpen 缓存失效
 
-### 6.2 参考耗时（RX 9070实测）
+### 6.2 参考耗时（RX 9070 实测）
 
 以下是我们用 `example.pdf` (13页) 在 RX 9070 上连续运行三次实测的数据，供速度异常排查时参考（稳定状态）：
 
@@ -398,5 +403,5 @@ cd ~ && tar -xzf ~/mineru_env_backup.tar.gz
 
 ---
 
-*最后更新: 2026-05-24*
+*最后更新: 2026-05-25*
 *这环境能跑，别再从头来了。*

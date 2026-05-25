@@ -1,6 +1,6 @@
 # MinerU 本地使用指南
 
-> 如何在 Windows 上启动 MinerU 服务（CLI / WebUI / API），以及如何从局域网或公网远程调用，输出对标官网精准解析 API 的 zip 包。
+> 如何在 Windows 上启动 MinerU 服务（CLI / WebUI / API），以及如何从局域网或公网远程调用。输出对标官网精准解析 API 的 zip 包。
 
 ---
 
@@ -26,14 +26,14 @@ export TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
 
 > 这些环境变量已写入 `~/.bashrc`，新终端会自动加载。
 
-### 1.2 三种使用方式
+### 1.2 四种使用方式
 
 | 方式 | 命令 | 适用场景 |
 |------|------|---------|
 | CLI 命令行 | `mineru -p <文件> -o <输出>` | 批量处理、脚本集成 |
 | WebUI 界面 | `mineru-gradio --server-name 0.0.0.0` | 拖拽上传、可视化 |
 | API 服务 | `mineru-api --host 0.0.0.0` | 程序调用、远程访问 |
-| OpenAI 兼容 | `mineru-openai-server --port 30000` | 兼容 OpenAI API 协议 |
+| OpenAI 兼容 | `mineru-openai-server --port 30000` | 接入 OpenAI 协议生态 |
 
 ---
 
@@ -207,7 +207,7 @@ while True:
         print("解析完成！")
         break
     elif task_status == "failed":
-        print(f"解析失败: {status['data'].get('error')}")
+        print(f"解析失败: {status.get('error', '未知错误')}")
         exit(1)
     else:
         print(f"状态: {task_status}，等待中...")
@@ -309,8 +309,8 @@ curl -o result.zip http://localhost:8000/tasks/a6e47eff-da08-4163-9520-05f0339aa
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `uploads` | file | 是* | 上传文件（与 server_url 二选一） |
-| `server_url` | string | 是* | 公网文件 URL（与 uploads 二选一） |
+| `files` | file | 是* | 上传文件（与 server_url 二选一） |
+| `server_url` | string | 是* | 公网文件 URL（与 files 二选一） |
 | `backend` | string | 否 | `hybrid-auto-engine`（默认，最高精度）/ `vlm-auto-engine` / `pipeline` |
 | `parse_method` | string | 否 | `auto`（默认）/ `txt` / `ocr` |
 | `lang_list` | string | 否 | 语言代码：`ch`/`en`/`japan`/`korean` 等 |
@@ -541,7 +541,7 @@ watch -n 1 /opt/rocm/bin/rocminfo
 `mineru-api` 默认最大并发 3 个任务（VLM 显存占用大）。如需修改，设置环境变量：
 
 ```bash
-export MINERU_MAX_CONCURRENT_REQUESTS=1  # 16GB 显存建议 1-2
+export MINERU_API_MAX_CONCURRENT_REQUESTS=1  # 16GB 显存建议 1-2
 ```
 
 ### 10.3 指定模型本地路径
@@ -613,4 +613,4 @@ export HF_HUB_ENABLE_HF_TRANSFER=1
 
 ---
 
-*最后更新: 2026-05-24*
+*最后更新: 2026-05-25*

@@ -399,4 +399,4 @@ mv ~/mineru_stable_7.1.1_backup ~/mineru_stable
 
 ---
 
-*最后更新: 2026-05-24*
+*最后更新: 2026-05-25*

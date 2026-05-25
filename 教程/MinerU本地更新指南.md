@@ -248,4 +248,4 @@ pip install 'mineru[core]==3.1.15' -i https://pypi.mirrors.ustc.edu.cn/simple/
 
 ---
 
-*最后更新: 2026-05-24*
+*最后更新: 2026-05-25*

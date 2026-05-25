@@ -1,12 +1,12 @@
 # MinerU AMD GPU 本地部署教程
 
 > 在 AMD 显卡上部署 MinerU 3.x + vllm + hybrid-auto-engine
-> 我们实际跑通了 RX 9070，其他 RDNA2/3/4 显卡也可参考
-> ROCm 7.1.1 + PyTorch 2.11.0 + vllm 0.21.1 + MinerU 3.1.15
+> 我们实际跑通了 RX 9070，其他 RDNA2/3/4 显卡可按相同流程套用
+> ROCm 7.1.1 + PyTorch 2.11.0 + vllm 0.21.1rc1 + MinerU 3.1.15
 
-本教程参考了 [Discussion #3662](https://github.com/opendatalab/MinerU/discussions/3662)、[AMD WSL2 官方指南](https://rocm.docs.amd.com/projects/radeon-ryzen/en/latest/docs/install/installrad/wsl/howto_wsl.html)和 [librocdxg](https://github.com/ROCm/librocdxg)。每一步都在 RX 9070 (gfx1201) + Windows 11 WSL2 上实际执行过（2026-05-24）。
+本教程参考了 [Discussion #3662](https://github.com/opendatalab/MinerU/discussions/3662)、[AMD WSL2 官方指南](https://rocm.docs.amd.com/projects/radeon-ryzen/en/latest/docs/install/installrad/wsl/howto_wsl.html)和 [librocdxg](https://github.com/ROCm/librocdxg)。每一步都在 RX 9070 (gfx1201) + Windows 11 WSL2 上实际执行过（2026-05-25）。
 
-**声明**：我们只在 RX 9070 上实测过。其他显卡型号标注为"预期可用"意味着流程应该相同（只需改 gfx 代号），但不能保证 100% 不出问题。欢迎试过之后来[提 Issue](https://github.com/buptanswer/mineru-local/issues) 补充兼容性数据。
+**声明**：我们只在 RX 9070 上实测过。表格里其他显卡型号写"预期可用"，是因为流程相同（只需改 gfx 代号），但无法保证 100% 不出问题。试过之后欢迎来[提 Issue](https://github.com/buptanswer/mineru/issues) 补充兼容性数据。
 
 ---
 
@@ -14,7 +14,7 @@
 
 ### 0.0 哪些 AMD GPU 能用
 
-vllm 的 CMakeLists.txt 只编译特定 gfx 架构的代码。同时 ROCm 运行时不一定认识所有显卡型号，有时候需要"伪装"成同代大哥。
+vllm 的 CMakeLists.txt 只编译特定 gfx 架构的代码；ROCm 运行时也不一定认得所有显卡型号，有时候需要"伪装"成同代旗舰。
 
 查自己的 gfx 代号：`rocminfo | grep gfx`
 
@@ -86,19 +86,19 @@ export HSA_OVERRIDE_GFX_VERSION=10.3.0
 | 组件 | 版本 | 说明 |
 |------|------|------|
 | Ubuntu | 22.04 | vllm 编译需要 cmake >= 4.0，22.04 可通过 snap 安装。24.04 的 cmake 3.28 太旧且 snap 可能有冲突 |
-| ROCm | 7.1.1 | 社区验证最多的版本。7.2 理论上也能用，但 cmake 包名有变化（见下文），我们没实际测过 |
-| Python | 3.13 | 和社区参考环境一致。3.12 也可以用 |
+| ROCm | 7.1.1 | 社区验证最充分的版本。7.2 理论上也能用，但 cmake 包名有变化（见下文），我们没实际测过 |
+| Python | 3.13 | 和社区参考环境一致；3.12 也可以用 |
 | PyTorch | 2.11.0 | 见下方详细解释 |
 | vllm | 0.21.1rc1 | PyPI 只有 CUDA 版，所以需要从源码编译 |
 | MinerU | 3.1.15 | 当前最新版 |
 
-**关于 PyTorch 2.11.0**：如果你用 WSL2，需要锁定这个版本。原因如下：
+**关于 PyTorch 2.11.0**：如果你用 WSL2，必须锁定这个版本。原因如下：
 
 ROCm 版 PyTorch 从 2.12 开始，官方把 rocprofiler 这个性能分析工具默认集成进去了——程序一启动就会自动调用它。但 rocprofiler 依赖 KFD（AMD 显卡在原生 Linux 里的底层驱动），而 WSL2 里并没有 KFD——WSL2 是通过微软的 librocdxg 技术"借用" Windows 的显卡驱动的。结果就是：新版 PyTorch 启动时找不到 KFD，直接报错退出（`Found 0 rocprofiler agents`）。
 
 如果你用的是原生 Linux（不是 WSL2），这个限制就不存在，可以用更新的 PyTorch。
 
-**关于 ROCm 7.2**：7.2 里 AMD 把一些 cmake 包重命名了（比如 `hiprand` 改成了 `rocrand`）。这会导致 vllm 的 cmake 配置找不到正确的包名。如果你的 ROCm 版本恰好是 7.2，需要在第八步额外创建 cmake 别名文件（我们已经提供了命令）。但我们自己没在 7.2 上完整跑通过，所以不能保证没问题。如果你已经装了 7.2 且不想降级，可以按教程试试——遇到 cmake 找不到包的错误就去第八步创建别名。实在搞不定就降回 7.1.1。
+**关于 ROCm 7.2**：7.2 里 AMD 把一些 cmake 包重命名了（比如 `hiprand` 改成了 `rocrand`）。这会导致 vllm 的 cmake 配置找不到旧包名。如果你的 ROCm 版本恰好是 7.2，需要在第八步额外创建 cmake 别名文件（我们已经提供了命令）。但我们自己没在 7.2 上完整跑通过，所以不能保证全程无坎。已经装了 7.2 且不想降级的话，可以按教程试试——遇到 cmake 找不到包的错误就去第八步创建别名；实在搞不定就降回 7.1.1。
 
 ---
 
@@ -777,4 +777,4 @@ vllm 没检测到 ROCm 平台。确认 8.8 节的两个 patch 已应用（仅 WS
 ---
 
 *最后更新: 2026-05-25*
-*实测环境: Windows 11 + WSL2 Ubuntu 22.04 + AMD RX 9070 + ROCm 7.1.1 + PyTorch 2.11.0 + vllm 0.21.1rc1 + MinerU 3.1.15*
+*实测环境：Windows 11 + WSL2 Ubuntu 22.04 + AMD RX 9070 + ROCm 7.1.1 + PyTorch 2.11.0 + vllm 0.21.1rc1 + MinerU 3.1.15*

@@ -1,7 +1,7 @@
 # MinerU NVIDIA GPU 云端部署教程
 
-> 适用于 Ubuntu + NVIDIA GPU (A10/A100/4090 等) 的远程服务器部署
-> 与 AMD 显卡本地部署可对照参考 [MinerU本地部署教程.md](MinerU本地部署教程.md)
+> 适用于 Ubuntu + NVIDIA GPU（A10 / A100 / 4090 等）的远程服务器部署
+> 与 AMD 本地部署可对照参考 [MinerU本地部署教程.md](MinerU本地部署教程.md)
 
 ---
 
@@ -80,15 +80,14 @@ nohup mineru-api --host 0.0.0.0 --port 8000 --enable-vlm-preload true \
 # 只有公网 IPv6 时（很多国内云服务器默认只给 IPv6）
 nohup mineru-api --host :: --port 8000 --enable-vlm-preload true \
     > ~/mineru_api.log 2>&1 &
-```
-
-> `--host ::` 同时监听 IPv4 和 IPv6。客户端用 `http://[<ipv6地址>]:8000` 访问。
 
 # 查看启动日志
 tail -f ~/mineru_api.log
 # 看到 "Uvicorn running on http://0.0.0.0:8000" 即启动完成
 # 按 Ctrl+C 退出日志查看（不关闭服务）
 ```
+
+> `--host ::` 同时监听 IPv4 和 IPv6。客户端用 `http://[<ipv6地址>]:8000` 访问。
 
 ### 3.2 启动 WebUI
 
@@ -217,7 +216,7 @@ echo 'export MINERU_API_MAX_CONCURRENT_REQUESTS=2' >> ~/.bashrc
 | MIOpen 预热 | 不需要 | 建议运行 cache_warmer.py |
 | cuDNN vs MIOpen | cuDNN 优化更成熟 | MIOpen 有冷启动问题 |
 | 安装复杂度 | ~10 分钟 | ~2 小时（含 vllm 编译） |
-| **推理速度 (13页PDF)** | VLM阶段: ~5s (2.18it/s)<br>OCR/版面: 36it/s | VLM阶段: ~6s (1.98it/s)<br>OCR/版面: 61it/s (高带宽优势) |
+| **推理速度（13 页 PDF）** | VLM 阶段：~5s（2.18 it/s）<br>OCR/版面：36 it/s | VLM 阶段：~6s（1.98 it/s）<br>OCR/版面：61 it/s（高带宽优势） |
 | **输出质量** | **相同** | **相同**（同为 hybrid-auto-engine + 同一 VLM 模型） |
 
 ---
