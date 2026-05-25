@@ -72,6 +72,7 @@ uv run mineru_cli.py example.pdf --api-key <token>
 | PyTorch | `pip install torch --index-url cu124` | 锁定 2.11.0（2.12+ 在 WSL2 崩溃） |
 | CONV 优化 | cuDNN 原生高效 | MIOpen 冷启动需预热（一次性） |
 | 平台检测 | 开箱即用 | 需 patch vllm 两个文件（WSL2） |
+| 推理速度 | 极快（基准测试参照 A10） | 与 N 卡旗舰级几乎持平（实测 RX 9070 甚至在版面提取阶段更快） |
 
 **关键版本锁**：PyTorch 必须 2.11.x（2.12+ 在 WSL2 中无法使用）。其余组件（ROCm、Python、Ubuntu）有小幅灵活性——详见部署教程。
 

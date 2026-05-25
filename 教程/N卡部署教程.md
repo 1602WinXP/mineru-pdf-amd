@@ -217,6 +217,7 @@ echo 'export MINERU_API_MAX_CONCURRENT_REQUESTS=2' >> ~/.bashrc
 | MIOpen 预热 | 不需要 | 建议运行 cache_warmer.py |
 | cuDNN vs MIOpen | cuDNN 优化更成熟 | MIOpen 有冷启动问题 |
 | 安装复杂度 | ~10 分钟 | ~2 小时（含 vllm 编译） |
+| **推理速度 (13页PDF)** | VLM阶段: ~5s (2.18it/s)<br>OCR/版面: 36it/s | VLM阶段: ~6s (1.98it/s)<br>OCR/版面: 61it/s (高带宽优势) |
 | **输出质量** | **相同** | **相同**（同为 hybrid-auto-engine + 同一 VLM 模型） |
 
 ---

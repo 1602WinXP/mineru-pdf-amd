@@ -211,17 +211,17 @@ EOF'
 4. **是不是掉到 CPU 了？** → 检查 `torch.cuda.is_available()`
 5. **是不是 ROCm 升级了？** → MIOpen 缓存失效
 
-### 6.2 参考耗时
+### 6.2 参考耗时（RX 9070实测）
 
-以下是我们用 1 页简单 PDF 在 RX 9070 上测到的数据，仅供参考（不是严谨 benchmark）：
+以下是我们用 `example.pdf` (13页) 在 RX 9070 上连续运行三次实测的数据，供速度异常排查时参考（稳定状态）：
 
-| 阶段 | 参考耗时 |
+| 阶段 | 参考耗时/速度 |
 |------|---------|
-| VLM 模型加载（已缓存） | 3-5s |
-| Two Step Extraction | 几秒到十几秒（取决于 PDF 复杂度） |
-| 1 页简单 PDF 总耗时 | ~9s（预热后） |
+| VLM 推理 (Two Step Extraction) | ~6s (约 1.98 it/s) |
+| 版面与 OCR (Processing pages) | <1s (约 61.13 it/s) |
+| 13 页总耗时 | 约 6-7s |
 
-如果耗时远超这个范围，先检查是否在用 CPU：`python -c "import torch; print(torch.cuda.is_available())"`
+如果你的速度远慢于这个数量级（比如 `Two Step Extraction` 只有 0.1 it/s），先检查是否掉到了 CPU：`python -c "import torch; print(torch.cuda.is_available())"`
 
 ### 6.3 用 nvitop 替代品监控 GPU
 
