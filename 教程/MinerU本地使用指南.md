@@ -249,24 +249,24 @@ def parse_pdf(file_path: str, lang: str = "ch") -> str:
                 "backend": "hybrid-auto-engine",
                 "parse_method": "auto",
                 "lang_list": lang,
-                "response_format_zip": True,
-                "return_md": True,
-                "return_content_list": True,
-                "return_images": True,
+                "response_format_zip": "true",
+                "return_md": "true",
+                "return_content_list": "true",
+                "return_images": "true",
             },
         )
     task = resp.json()
-    task_id = task["data"]["task_id"]
+    task_id = task["task_id"]
     print(f"[{task_id}] 任务已提交")
 
     # 2. 轮询等待
     while True:
         status = requests.get(f"{BASE_URL}/tasks/{task_id}").json()
-        s = status["data"]["status"]
+        s = status["status"]
         if s == "completed":
             break
         elif s == "failed":
-            raise RuntimeError(f"解析失败: {status['data'].get('error')}")
+            raise RuntimeError(f"解析失败: {status.get('error', '未知错误')}")
         print(f"[{task_id}] {s}...")
         time.sleep(3)
 
@@ -296,7 +296,7 @@ curl -X POST http://localhost:8000/tasks \
   -F "lang_list=ch"
 
 # 返回示例:
-# {"code":200,"data":{"task_id":"a6e47eff-da08-4163-9520-05f0339aab4f"}}
+# {"task_id":"a6e47eff-da08-4163-9520-05f0339aab4f", "status": "pending", "message": "Task submitted successfully"}
 
 # 查询状态
 curl http://localhost:8000/tasks/a6e47eff-da08-4163-9520-05f0339aab4f

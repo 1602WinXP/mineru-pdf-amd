@@ -113,7 +113,7 @@ mineru-models-download --help  # 查看完整选项
 
 升级后，新模型名会体现在新版 `enum_class.py` 中，首次运行时自动下载。
 
-### 3.2 重新下载当前模型（修复损坏/清理空间）
+### 4.2 重新下载当前模型（修复损坏/清理空间）
 
 如果只是想让当前模型重新下载（比如文件损坏了），删缓存即可：
 
@@ -124,7 +124,7 @@ rm -rf ~/.cache/huggingface/hub/models--opendatalab--PDF-Extract-Kit-*
 
 然后运行一次 MinerU，模型会自动重新下载（**下载的仍是当前 MinerU 版本对应的模型，不是最新发布的模型**）。
 
-### 3.2 查看当前用的是哪个版本
+### 4.3 查看当前用的是哪个版本
 
 ```bash
 # VLM 模型版本（看目录名）
@@ -136,7 +136,7 @@ ls ~/.cache/huggingface/hub/models--opendatalab--PDF-Extract-Kit-*/
 # 或者启动时观察日志，会打印下载的模型路径和版本
 ```
 
-### 3.3 指定特定版本下载
+### 4.4 指定特定版本下载
 
 如果不想用最新版，可以指定版本号：
 
@@ -159,7 +159,7 @@ snapshot_download(
 
 ## 五、手动下载模型（国内网络不好时）
 
-### 4.1 方案 A：Windows 预下载，复制到 WSL2
+### 5.1 方案 A：Windows 预下载，复制到 WSL2
 
 在 Windows 上通过浏览器或下载工具下载模型文件，然后复制到 WSL2。
 
@@ -180,9 +180,9 @@ cp -r /mnt/c/Users/<用户名>/Desktop/MinerU2.5-Pro-2604-1.2B ~/models_local/
 cp -r /mnt/c/Users/<用户名>/Desktop/PDF-Extract-Kit-1.0 ~/models_local/
 ```
 
-**步骤 3**：配置本地模型路径（见第五节）
+**步骤 3**：配置本地模型路径（见第六节）
 
-### 4.2 方案 B：ModelScope 镜像下载
+### 5.2 方案 B：ModelScope 镜像下载
 
 ```bash
 # 用 ModelScope 的 CLI 工具下载（国内快很多）
@@ -198,7 +198,7 @@ snapshot_download('OpenDataLab/PDF-Extract-Kit-1.0', cache_dir='~/.cache/modelsc
 export MINERU_MODEL_SOURCE=modelscope
 ```
 
-### 4.3 方案 C：离线环境
+### 5.3 方案 C：离线环境
 
 在一台能上网的机器上：
 
@@ -216,13 +216,13 @@ huggingface-cli download opendatalab/PDF-Extract-Kit-1.0 \
 tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
 ```
 
-把 `mineru_models.tar.gz` 传到离线机器，解压后配置本地模型路径（见第五节）。
+把 `mineru_models.tar.gz` 传到离线机器，解压后配置本地模型路径（见第六节）。
 
 ---
 
 ## 六、使用本地模型（不联网）
 
-### 5.1 配置 `mineru.json`
+### 6.1 配置 `mineru.json`
 
 在 home 目录创建 `~/mineru.json`：
 
@@ -235,7 +235,7 @@ tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
 }
 ```
 
-### 5.2 目录结构要求
+### 6.2 目录结构要求
 
 ```
 ~/models_local/
@@ -255,7 +255,7 @@ tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
 
 > 确保路径和 HuggingFace 仓库的目录结构完全一致。如果是手动下载的，不要把文件放到多余的子目录里。
 
-### 5.3 使用
+### 6.3 使用
 
 ```bash
 export MINERU_MODEL_SOURCE=local
