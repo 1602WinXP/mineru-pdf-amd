@@ -96,7 +96,7 @@ Ubuntu：
 ```bash
 export HSA_ENABLE_DXG_DETECTION=1
 /opt/rocm/bin/rocminfo | grep -A5 "Agent 2"
-# 应显示 gfx1201, AMD Radeon RX 9070
+# 应显示你的 GPU 信息，如 gfx1201, AMD Radeon RX 9070
 ```
 
 ---
@@ -211,7 +211,7 @@ EOF
 ```bash
 mkdir -p ~/vllm_build_rocm72
 
-export PYTORCH_ROCM_ARCH=gfx1201
+export PYTORCH_ROCM_ARCH=gfx1201   # 替换为你的 gfx 代号（见部署教程 0.0 节）
 
 cmake -S ~/vllm -B ~/vllm_build_rocm72 \
     -G Ninja \
@@ -231,7 +231,7 @@ cd ~/vllm_build_rocm72 && ninja -j4
 cp ~/vllm_build_rocm72/*.abi3.so ~/vllm/vllm/
 
 cd ~/vllm
-VLLM_TARGET_DEVICE=rocm PYTORCH_ROCM_ARCH=gfx1201 \
+VLLM_TARGET_DEVICE=rocm PYTORCH_ROCM_ARCH=gfx1201 \   # 替换为你的 gfx 代号
     ~/mineru_rocm72/.venv/bin/pip install -e . --no-deps --no-build-isolation
 
 # amdsmi

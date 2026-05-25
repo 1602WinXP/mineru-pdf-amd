@@ -60,7 +60,7 @@ mineru -p input.pdf -o output -b hybrid-auto-engine -l ch
 在 Windows PowerShell 中一行搞定：
 
 ```powershell
-wsl -d Ubuntu-22.04 -- bash -c "cd ~/mineru_stable && . .venv/bin/activate && export HSA_ENABLE_DXG_DETECTION=1 MINERU_MODEL_SOURCE=huggingface && mineru -p /home/dev/input.pdf -o /home/dev/output -b hybrid-auto-engine"
+wsl -d Ubuntu-22.04 -- bash -c "cd ~/mineru_stable && . .venv/bin/activate && export HSA_ENABLE_DXG_DETECTION=1 MINERU_MODEL_SOURCE=huggingface && mineru -p ~/input.pdf -o ~/output -b hybrid-auto-engine"
 ```
 
 ### 2.3 输出文件
@@ -464,11 +464,11 @@ chmod +x ~/start_mineru_api.sh
 # WSL2 内编辑 /etc/wsl.conf
 sudo sh -c 'cat > /etc/wsl.conf << EOF
 [boot]
-command = /home/dev/start_mineru_api.sh
+command = ~/start_mineru_api.sh
 EOF'
 ```
 
-> 注意：`wsl.conf` 的 boot 命令以 root 运行，如需以普通用户运行请使用 `su - dev -c "/home/dev/start_mineru_api.sh"`。
+> 注意：`wsl.conf` 的 boot 命令以 root 运行，如需以普通用户运行请使用 `su - $USER -c "~/start_mineru_api.sh"`。
 
 ---
 
@@ -541,7 +541,7 @@ watch -n 1 /opt/rocm/bin/rocminfo
 `mineru-api` 默认最大并发 3 个任务（VLM 显存占用大）。如需修改，设置环境变量：
 
 ```bash
-export MINERU_MAX_CONCURRENT_REQUESTS=1  # RX 9070 16GB 建议 1-2
+export MINERU_MAX_CONCURRENT_REQUESTS=1  # 16GB 显存建议 1-2
 ```
 
 ### 10.3 指定模型本地路径

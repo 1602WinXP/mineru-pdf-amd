@@ -1,6 +1,6 @@
 # MinerU 速查与运维手册
 
-> 最后一课：所有你日常会用到的命令、判断方法、和踩出来的经验
+> 日常会用到的命令、判断方法和踩出来的经验
 
 ---
 
@@ -47,27 +47,25 @@ python -c "from vllm.platforms import current_platform; print(current_platform.i
 
 ---
 
-## 二、不可触碰的红线
+## 二、建议避免的操作
 
-| 绝对不能做的事 | 原因 | 如果已经做了 |
-|--------------|------|------------|
-| `uv pip install mineru[core]` | 覆盖 ROCm PyTorch 为 CUDA 版 | 重装 `torch==2.11.0+rocm7.1` |
-| `pip install vllm`（PyPI） | 安装 CUDA 版 vllm，破坏 ROCm 环境 | 卸载后重编译 |
-| `pip install torch --upgrade` | 装上 2.12+，WSL2 直接崩溃 | 降回 2.11.0 |
-| `sudo apt autoremove` | 可能删除 ROCm 依赖 | 重装被删的包 |
-| 删除 `/opt/rocm/` 任何内容 | 破坏 ROCm 运行时 | 重装 ROCm |
-| 在 WSL2 中 `rm -rf /` | 不言自明 | 重装一切 |
+以下操作在 AMD ROCm/WSL2 环境下可能导致问题：
 
-### 可以做的事
+| 操作 | 后果 | 补救 |
+|------|------|------|
+| `uv pip install mineru[core]` | 可能覆盖 ROCm PyTorch 为 CUDA 版 | 重装 `torch==2.11.0+rocm7.1` |
+| `pip install vllm`（PyPI） | 安装 CUDA 版 vllm | 卸载后从源码重编译 |
+| `pip install torch --upgrade`（WSL2） | 装上 2.12+，程序崩溃 | 降回 2.11.0 |
+| `sudo apt autoremove` | 可能误删 ROCm 依赖 | 重装被误删的包 |
 
-| 操作 | 安全吗 | 备注 |
-|------|--------|------|
-| `pip install --upgrade mineru[core]` | ✅ | 用 pip 而非 uv pip |
-| 删除 `~/.cache/huggingface/hub/` | ✅ | 下次运行重新下载 |
-| 删除 `~/.triton/cache/` | ✅ | 下次 JIT 重新编译（慢一次） |
-| 删除 `~/.cache/miopen/` | ✅ | 需重新预热 |
-| `sudo apt update && sudo apt upgrade` | ⚠️ | 注意不要升级 ROCm 核心包 |
-| 重装 WSL2 | ✅ | 按照部署教程重来即可 |
+### 安全的操作
+
+| 操作 | 备注 |
+|------|------|
+| `pip install --upgrade mineru[core]` | 用 pip，不要用 uv pip |
+| 删除 `~/.cache/huggingface/hub/` | 下次运行重新下载 |
+| 删除 `~/.triton/cache/` | 下次 JIT 重新编译（首次会慢） |
+| 删除 `~/.cache/miopen/` | 需要重新预热 |
 
 ---
 
@@ -78,7 +76,7 @@ python -c "from vllm.platforms import current_platform; print(current_platform.i
 ```
 VLM model load: 46.04s                    ← 正常，首次加载模型
 Triton kernel JIT compilation: ...        ← 正常，首次编译缓存
-Two Step Extraction: 100%|...| 7.94s/it   ← 首次慢，后续 2-3s/it
+Two Step Extraction: 100%|...| 7.94s/it   ← 首次慢（JIT 编译），后续会快
 Processing pages: 100%|...| 83it/s        ← 一直这么快就正常
 Completed batch 1/1                        ← 成功
 ```
@@ -123,7 +121,7 @@ sudo apt clean
 
 ### 4.2 内存管理
 
-RX 9070 只有 16GB 显存，hybrid-auto-engine 加载 VLM 模型后约占用 10-12GB：
+hybrid-auto-engine 实测显存占用约 8.3GB（不含系统占用），16GB 卡很从容。12GB 和 8GB 卡需注意限制 vllm 占用：
 
 ```bash
 # 查看显存使用
@@ -196,7 +194,7 @@ pkill -f mineru-api
 ```bash
 sudo sh -c 'cat > /etc/wsl.conf << EOF
 [boot]
-command = /bin/su - dev -c "cd /home/dev/mineru_stable && .venv/bin/nohup mineru-api --host 0.0.0.0 --port 8000 > /home/dev/mineru_api.log 2>&1 &"
+command = /bin/su - $USER -c "cd $HOME/mineru_stable && .venv/bin/nohup mineru-api --host 0.0.0.0 --port 8000 > $HOME/mineru_api.log 2>&1 &"
 EOF'
 ```
 
@@ -213,16 +211,17 @@ EOF'
 4. **是不是掉到 CPU 了？** → 检查 `torch.cuda.is_available()`
 5. **是不是 ROCm 升级了？** → MIOpen 缓存失效
 
-### 6.2 基准性能
+### 6.2 参考耗时
 
-在 RX 9070 上，hybrid-auto-engine 预热后的正常速度：
+以下是我们用 1 页简单 PDF 在 RX 9070 上测到的数据，仅供参考（不是严谨 benchmark）：
 
-| 阶段 | 正常 | 偏慢 | 严重问题 |
-|------|------|------|---------|
-| VLM 模型加载 | 3-5s | 10-20s | >60s（可能磁盘慢） |
-| Two Step Extraction | 2-4s/it | 5-8s/it | >10s/it（可能 CPU fallback） |
-| Processing pages | 60-100 it/s | 30-60 it/s | <20 it/s（可能 CPU fallback） |
-| 1 页 PDF 总耗时 | 5-15s | 15-30s | >60s |
+| 阶段 | 参考耗时 |
+|------|---------|
+| VLM 模型加载（已缓存） | 3-5s |
+| Two Step Extraction | 几秒到十几秒（取决于 PDF 复杂度） |
+| 1 页简单 PDF 总耗时 | ~9s（预热后） |
+
+如果耗时远超这个范围，先检查是否在用 CPU：`python -c "import torch; print(torch.cuda.is_available())"`
 
 ### 6.3 用 nvitop 替代品监控 GPU
 
@@ -262,24 +261,24 @@ cat output/<文件名>/hybrid_auto/<文件名>.md
 
 ### 8.1 最小备份
 
-以下是你绝对不能丢的东西（加起来不到 1MB）：
+建议备份以下文件（加起来不到 1MB），省得重装后手动改：
 
 ```bash
 # 备份到 Windows 桌面
-mkdir -p /mnt/c/Users/14044/Desktop/mineru_backup
+mkdir -p /mnt/c/Users/<用户名>/Desktop/mineru_backup
 
 # 配置文件
-cp ~/mineru.json /mnt/c/Users/14044/Desktop/mineru_backup/ 2>/dev/null
-cp ~/.bashrc /mnt/c/Users/14044/Desktop/mineru_backup/bashrc_backup
+cp ~/mineru.json /mnt/c/Users/<用户名>/Desktop/mineru_backup/ 2>/dev/null
+cp ~/.bashrc /mnt/c/Users/<用户名>/Desktop/mineru_backup/bashrc_backup
 
 # Patch 后的文件（避免重新手动改）
-mkdir -p /mnt/c/Users/14044/Desktop/mineru_backup/patches
+mkdir -p /mnt/c/Users/<用户名>/Desktop/mineru_backup/patches
 cp ~/mineru_stable/.venv/lib/python3.13/site-packages/mineru/model/utils/tools/infer/predict_rec.py \
-   /mnt/c/Users/14044/Desktop/mineru_backup/patches/
+   /mnt/c/Users/<用户名>/Desktop/mineru_backup/patches/
 cp ~/mineru_stable/.venv/lib/python3.13/site-packages/mineru/model/utils/tools/infer/predict_det.py \
-   /mnt/c/Users/14044/Desktop/mineru_backup/patches/
-cp ~/vllm/vllm/platforms/__init__.py /mnt/c/Users/14044/Desktop/mineru_backup/patches/vllm_init.py
-cp ~/vllm/vllm/platforms/rocm.py /mnt/c/Users/14044/Desktop/mineru_backup/patches/vllm_rocm.py
+   /mnt/c/Users/<用户名>/Desktop/mineru_backup/patches/
+cp ~/vllm/vllm/platforms/__init__.py /mnt/c/Users/<用户名>/Desktop/mineru_backup/patches/vllm_init.py
+cp ~/vllm/vllm/platforms/rocm.py /mnt/c/Users/<用户名>/Desktop/mineru_backup/patches/vllm_rocm.py
 ```
 
 ### 8.2 完整备份（虚拟环境）
@@ -289,7 +288,7 @@ cp ~/vllm/vllm/platforms/rocm.py /mnt/c/Users/14044/Desktop/mineru_backup/patche
 cd ~ && tar -czf mineru_env_backup.tar.gz mineru_stable/
 
 # 复制到 Windows
-cp ~/mineru_env_backup.tar.gz /mnt/c/Users/14044/Desktop/
+cp ~/mineru_env_backup.tar.gz /mnt/c/Users/<用户名>/Desktop/
 ```
 
 ### 8.3 恢复

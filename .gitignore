@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Script outputs (downloaded zips, extracted results, markdown output)
+*.zip
+*_output/
+output/
+mineru_output/
+*.md.tmp

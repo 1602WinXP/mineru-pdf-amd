@@ -229,8 +229,8 @@ tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
 ```json
 {
     "models-dir": {
-        "vlm": "/home/dev/models_local/MinerU2.5-Pro-2604-1.2B",
-        "pipeline": "/home/dev/models_local/PDF-Extract-Kit-1.0"
+        "vlm": "~/models_local/MinerU2.5-Pro-2604-1.2B",
+        "pipeline": "~/models_local/PDF-Extract-Kit-1.0"
     }
 }
 ```
@@ -265,7 +265,7 @@ python -c "
 from mineru.utils.config_reader import get_local_models_dir
 print(get_local_models_dir())
 "
-# 输出: {'vlm': '/home/dev/models_local/MinerU2.5-Pro-2604-1.2B', ...}
+# 输出: {'vlm': '~/models_local/MinerU2.5-Pro-2604-1.2B', ...}
 
 # 正常运行
 mineru -p input.pdf -o output -b hybrid-auto-engine

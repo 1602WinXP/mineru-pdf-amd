@@ -161,7 +161,7 @@ pip install --force-reinstall \
 
 ```bash
 cd ~/vllm && git pull
-# 重新 cmake + ninja
+# 重新 cmake + ninja（gfx1201 换成你自己的显卡代号）
 export PYTORCH_ROCM_ARCH=gfx1201
 mkdir -p ~/vllm_build && cd ~/vllm_build
 cmake -S ~/vllm -B . -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \

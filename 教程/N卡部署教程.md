@@ -1,7 +1,7 @@
 # MinerU NVIDIA GPU 云端部署教程
 
 > 适用于 Ubuntu + NVIDIA GPU (A10/A100/4090 等) 的远程服务器部署
-> 与 AMD RX 9070 本地部署可对照参考 [MinerU本地部署教程.md](MinerU本地部署教程.md)
+> 与 AMD 显卡本地部署可对照参考 [MinerU本地部署教程.md](MinerU本地部署教程.md)
 
 ---
 
@@ -209,7 +209,7 @@ echo 'export MINERU_API_MAX_CONCURRENT_REQUESTS=2' >> ~/.bashrc
 
 ## 七、与 AMD 本地部署的关键差异
 
-| 项目 | NVIDIA（本文） | AMD RX 9070（本地教程） |
+| 项目 | NVIDIA（本文） | AMD vllm 兼容显卡（本地教程） |
 |------|--------------|---------------------|
 | vllm 安装 | `mineru[all]` 一键安装 | 必须从源码编译 |
 | PyTorch | `pip install torch --index-url cu124` | `pip install torch==2.11.0+rocm7.1 --index-url rocm7.1` |
