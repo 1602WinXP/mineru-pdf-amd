@@ -29,16 +29,16 @@ vllm 的 CMakeLists.txt 只编译特定 gfx 架构的代码；ROCm 运行时也�
 |---------|---------|--------------------------|-------------------------------------|------|
 | RX 9070 XT / 9070 | gfx1201 | `gfx1201` | 不需要 | 我们实测通过 |
 | RX 7900 XTX / XT / GRE | gfx1100 | `gfx1100` | 不需要 | 旗舰卡，ROCm 原生支持 |
-| RX 7800 XT | gfx1102 | `gfx1102` | 如果 rocminfo 不识别则加 `11.0.0` | vllm 编译支持，但 ROCm 运行时可能不认 |
-| RX 7700 XT | gfx1102 | `gfx1102` | 同上 | 12GB 够用 |
-| RX 7600 XT | gfx1102 | `gfx1102` | 同上 | 16GB 版显存安全 |
-| RX 7600 | gfx1103 | `gfx1103` | 如果 rocminfo 不识别则加 `11.0.0` | 8GB 显存，勉强能跑但不宽裕 |
-| RX 6950 / 6900 / 6800 系 | gfx1030 | `gfx1030` | 不需要 | 16GB 版显存安全，未实测 |
-| RX 6750 / 6700 XT | gfx1030 | `gfx1030` | 不需要 | 12GB 够用 |
+| RX 7800 XT / 7700 XT | gfx1101 | `gfx1101` | 不需要 | Navi 32，ROCm 较新版已原生支持 |
+| RX 7600 XT | gfx1102 | `gfx1102` | 如果 rocminfo 不识别则加 `11.0.0` | Navi 33，vllm 编译支持，但 ROCm 运行时官方未必收录 |
+| RX 7600 | gfx1102 | `gfx1102` | 同上 | 8GB 显存，勉强能跑但不宽裕 |
+| RX 6950 / 6900 / 6800 XT / 6800 | gfx1030 | `gfx1030` | 不需要 | Navi 21，16GB 版显存安全，未实测 |
+| RX 6750 XT / 6700 XT / 6700 | gfx1031 | `gfx1030`（伪装编译） | 需要 `10.3.0` | Navi 22，vllm 官方未列 gfx1031，编译时按 gfx1030 + 运行时伪装即可；12GB 够用 |
 
 **明确不支持的**：
-- RDNA1 全系（RX 5000 系列，gfx1010）——vllm 不支持此架构
-- RX 6400 / 6500 XT（gfx1031/gfx1032）——vllm 未包含这些变体
+- RDNA1 全系（RX 5700/5700 XT/5600 XT 为 gfx1010；RX 5500/5500 XT 为 gfx1012）——vllm 不支持此架构
+- RX 6650 / 6600 XT / 6600（gfx1032，Navi 23）——vllm 未包含此变体，需要 `HSA_OVERRIDE_GFX_VERSION=10.3.0` 伪装为 gfx1030 试试，但不一定能跑通
+- RX 6500 XT / 6400（gfx1034，Navi 24）——计算单元和显存都太少，ROCm 也不支持
 - 集成显卡（APU / 核显）——WSL2 下共享显存机制容易出问题，未测试
 
 **关于 `HSA_OVERRIDE_GFX_VERSION`**：
@@ -48,10 +48,10 @@ ROCm 编译时（vllm 的 `PYTORCH_ROCM_ARCH`）和运行时（rocminfo 识别�
 如果 `rocminfo` 看不到你的显卡，或者运行时 MIOpen 报 "no kernel found"，在 `~/.bashrc` 中加一行：
 
 ```bash
-# RX 7000 系中端卡伪装成 7900 XTX（同是 RDNA3，架构兼容）
+# RX 7600 / 7600 XT（gfx1102）伪装成 7900 XTX（gfx1100，同是 RDNA3，架构兼容）
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
 
-# RX 6000 系卡伪装成 6900 XT
+# RX 6700 系 / 6600 系（gfx1031 / gfx1032）伪装成 6900 XT（gfx1030）
 export HSA_OVERRIDE_GFX_VERSION=10.3.0
 ```
 
@@ -61,9 +61,9 @@ export HSA_OVERRIDE_GFX_VERSION=10.3.0
 
 12GB 和 16GB 卡实测不会爆显存。8GB 卡如果遇到 `hipErrorOutOfMemory`：
 
-1. 限制 vllm 的 KV Cache 占比：
+1. 告诉 MinerU 显存上限（以 GB 为单位，触发更保守的并发 / KV cache 分配策略）：
    ```bash
-   export VLLM_GPU_MEMORY_UTILIZATION=0.4
+   export MINERU_VIRTUAL_VRAM_SIZE=6
    ```
 2. 或者换 pipeline 后端（不需要 vllm，显存占用低很多）：
    ```bash
@@ -98,7 +98,7 @@ ROCm 版 PyTorch 从 2.12 开始，官方把 rocprofiler 这个性能分析工�
 
 如果你用的是原生 Linux（不是 WSL2），这个限制就不存在，可以用更新的 PyTorch。
 
-**关于 ROCm 7.2**：7.2 里 AMD 把一些 cmake 包重命名了（比如 `hiprand` 改成了 `rocrand`）。这会导致 vllm 的 cmake 配置找不到旧包名。如果你的 ROCm 版本恰好是 7.2，需要在第八步额外创建 cmake 别名文件（我们已经提供了命令）。但我们自己没在 7.2 上完整跑通过，所以不能保证全程无坎。已经装了 7.2 且不想降级的话，可以按教程试试——遇到 cmake 找不到包的错误就去第八步创建别名；实在搞不定就降回 7.1.1。
+**关于 ROCm 7.2**：7.2 里 AMD 调整了部分 cmake 包的对外暴露方式——比如 `hiprand` 不再独立提供 cmake 配置，统一通过底层的 `rocrand` 包提供。这会导致 vllm 的 cmake 配置找不到旧的 `hiprand` 包名。如果你的 ROCm 版本恰好是 7.2，需要在第八步额外创建 cmake 别名文件（我们已经提供了命令）。但我们自己没在 7.2 上完整跑通过，所以不能保证全程无坎。已经装了 7.2 且不想降级的话，可以按教程试试——遇到 cmake 找不到包的错误就去第八步创建别名；实在搞不定就降回 7.1.1。
 
 ---
 

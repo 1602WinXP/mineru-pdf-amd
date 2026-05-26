@@ -356,9 +356,9 @@ netsh advfirewall firewall add rule `
 
 现在局域网内其他设备可以通过 `http://<你的Windows_IP>:8000` 访问。
 
-### 6.2 方案 B：WSL2 镜像网络模式（Windows 11 新版）
+### 6.2 方案 B：WSL2 镜像网络模式（Windows 11 22H2+）
 
-如果你用的是较新的 Windows 11（Build 22000+），可以在用户目录 `C:\Users\<用户名>\.wslconfig` 中配置：
+如果你用的是 Windows 11 22H2（Build 22621）或更高版本，并且 WSL 版本 ≥ 2.0.9，可以在用户目录 `C:\Users\<用户名>\.wslconfig` 中配置：
 
 ```ini
 [wsl2]

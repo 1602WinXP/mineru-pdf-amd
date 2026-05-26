@@ -36,8 +36,8 @@ MinerU 使用两套模型，分别托管在两个 HuggingFace 仓库：
 
 | 模型 | HuggingFace 仓库 | 大小 | 作用 |
 |------|-----------------|------|------|
-| **VLM 模型** | `opendatalab/MinerU2.5-Pro-2604-1.2B` | ~2.2GB | 视觉语言模型，决定解析精度 |
-| **Pipeline 模型** | `opendatalab/PDF-Extract-Kit-1.0` | ~45MB | 版面分析 / OCR / 公式 / 表格识别 |
+| **VLM 模型** | `opendatalab/MinerU2.5-Pro-2604-1.2B` | ~2.3GB | 视觉语言模型，决定解析精度 |
+| **Pipeline 模型** | `opendatalab/PDF-Extract-Kit-1.0` | 仓库总量约 15GB；MinerU 实际只拉取所需子模块（约 1GB 左右） | 版面分析 / OCR / 公式 / 表格识别 |
 
 > VLM 模型名字里的 `2604` 表示 2026 年 4 月版本。官方发新模型时会改这个编号。
 
@@ -331,13 +331,16 @@ grep -r "MinerU2.5\|PDF-Extract-Kit" \
 
 ### Pipeline 模型文件 (PDF-Extract-Kit-1.0)
 
-| 目录 | 说明 | 大小 |
-|------|------|------|
-| `models/Layout/PP-DocLayoutV2/` | 版面检测模型 | ~13MB |
-| `models/MFR/` | 数学公式识别 | ~8MB |
-| `models/OCR/paddleocr_torch/` | OCR 检测+识别 | ~14MB |
-| `models/TabRec/` | 表格识别 | ~8MB |
-| `models/TabCls/` | 表格分类 | ~2MB |
+| 目录 | 说明 |
+|------|------|
+| `models/Layout/PP-DocLayoutV2/` | 版面检测模型 |
+| `models/MFR/unimernet_hf_small_2503/` | 数学公式识别（unimernet small，单体约 770MB） |
+| `models/MFR/pp_formulanet_plus_m/` | 公式识别备选（PP-FormulaNet+ M） |
+| `models/OCR/paddleocr_torch/` | OCR 检测+识别 |
+| `models/TabRec/SlanetPlus/` 等 | 表格识别 |
+| `models/TabCls/` | 表格分类 |
+
+> 整个 `PDF-Extract-Kit-1.0` 仓库容量约 15GB（含多套备选模型），但 MinerU 默认仅下载当前流水线实际使用的那一组（约 1GB 左右）。
 
 ---
 
@@ -375,7 +378,7 @@ ln -s ~/shared_models/models--opendatalab--MinerU2.5-Pro-2604-1.2B \
 
 ### Q: 模型下载一半断了怎么办？
 
-HF 支持断点续传。直接重新运行 MinerU 即可，会从断点继续。或者用 `huggingface-cli download --resume`。
+HF 自动支持断点续传——直接重新运行 MinerU 即可，会从断点继续；也可以直接重跑 `huggingface-cli download <模型名>`，已下载的文件会自动跳过。
 
 ---
 

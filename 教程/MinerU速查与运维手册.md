@@ -86,7 +86,7 @@ Completed batch 1/1                        ← 成功
 ```
 Found 0 rocprofiler agents                ← PyTorch 2.12+ 被装上了
 Device string must not be empty           ← vllm 没检测到 ROCm
-Error code: 34 | DRIVER_NOT_LOADED        ← 出现在非 WSL2 检测环节则正常
+Error code: 34 | DRIVER_NOT_LOADED        ← amdsmi 在 WSL2 启动时无法初始化，属预期现象（已被 vllm patch 兜底）
 Using 'pin_memory=False' as WSL is detected ← 正常，WSL2 限制
 ```
 
@@ -131,8 +131,8 @@ print(f'Allocated: {torch.cuda.memory_allocated(0)/1e9:.1f} GB')
 print(f'Reserved:  {torch.cuda.memory_reserved(0)/1e9:.1f} GB')
 "
 
-# 限制 vllm 显存占用（针对 8GB 显卡推荐）
-export VLLM_GPU_MEMORY_UTILIZATION=0.4
+# 告诉 MinerU 显存上限（GB 为单位，针对 8GB 显卡推荐）
+export MINERU_VIRTUAL_VRAM_SIZE=6
 
 # 如果 API 服务 OOM，降低并发
 export MINERU_API_MAX_CONCURRENT_REQUESTS=1
@@ -228,10 +228,10 @@ EOF
 
 如果你的速度远慢于这个数量级（比如 `Two Step Extraction` 只有 0.1 it/s），先检查是否掉到了 CPU：`python -c "import torch; print(torch.cuda.is_available())"`
 
-### 6.3 用 nvitop 替代品监控 GPU
+### 6.3 GPU 监控（AMD 版的 nvidia-smi）
 
 ```bash
-# AMD GPU 没有 nvidia-smi，用 rocm-smi 和 radeontop
+# AMD GPU 没有 nvidia-smi / nvitop，用 rocm-smi 和 radeontop
 /opt/rocm/bin/rocm-smi --showuse
 
 # 或监控显存
@@ -383,7 +383,7 @@ cd ~ && tar -xzf ~/mineru_env_backup.tar.gz
 | 7 | `ping` 外网不通 | WSL2 systemd-resolved 不完善，需手动写 `/etc/resolv.conf`（每次 `wsl --shutdown` 后） |
 | 8 | ROCm 仓库用了 jammy 在 noble 上 | Ubuntu 24.04 是 noble，Ubuntu 22.04 是 jammy，不能混用 |
 | 9 | cmake 报版本太旧 | Ubuntu 22.04 自带 cmake 3.22，vllm 需要 4.x；用 `snap install cmake --classic` |
-| 10 | cmake 报 `hiprand` not found | ROCm 7.x 重命名为 `rocrand`，需创建 cmake alias wrapper |
+| 10 | cmake 报 `hiprand` not found | ROCm 7.x 部分版本不再单独提供 `hiprand` cmake 配置（统一到底层 `rocrand`），需创建 cmake alias wrapper |
 | 11 | 编译报 `internal/rocblas-auxiliary.h` 找不到 | 符号链接 `hipblas.h → rocblas.h` 不够，rocblas.h 内部有相对 include 引用 |
 | 12 | 同上 | 必须 `apt install hipblas-dev` 获取真实的 1.4MB hipblas.h（含完整兼容层） |
 | 13 | 同上 | 必须 `apt install hiprand-dev` 同理 |
