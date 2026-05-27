@@ -221,4 +221,4 @@ echo 'export MINERU_API_MAX_CONCURRENT_REQUESTS=2' >> ~/.bashrc
 
 ---
 
-*最后更新: 2026-05-25*
+*文档最后更新: 2026-05-27*

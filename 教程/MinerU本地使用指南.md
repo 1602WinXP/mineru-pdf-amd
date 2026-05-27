@@ -356,16 +356,13 @@ netsh advfirewall firewall add rule `
 
 现在局域网内其他设备可以通过 `http://<你的Windows_IP>:8000` 访问。
 
-### 6.2 方案 B：WSL2 镜像网络模式（Windows 11 22H2+）
+### 6.2 方案 B：WSL2 镜像网络模式（Windows 11 22H2+，推荐）
 
-如果你用的是 Windows 11 22H2（Build 22621）或更高版本，并且 WSL 版本 ≥ 2.0.9，可以在用户目录 `C:\Users\<用户名>\.wslconfig` 中配置：
+如果你按 [部署教程 1.3 节](MinerU本地部署教程.md#13-配置-wsl2-资源强烈建议) 已经设过 `networkingMode=mirrored`，这一步直接跳过——WSL2 已经共享 Windows 网络栈，无需端口转发，局域网设备直接用 Windows 的 LAN IP 访问 `http://<windows_lan_ip>:8000` 即可。
 
-```ini
-[wsl2]
-networkingMode=mirrored
-```
+⚠️ **镜像模式必须配合 Hyper-V 防火墙放行**：如果你启用了 `firewall=true`，浏览器从 Windows 本机或局域网访问 WSL2 端口会被拦截。按 [部署教程 2.2 节](MinerU本地部署教程.md#22-放行-hyper-v-防火墙最易忽略的坑) 执行 `Set-NetFirewallHyperVVMSetting` 命令放行。
 
-配置后 `wsl --shutdown` 再重启，WSL2 将共享 Windows 的网络，无需端口转发。但 mirror 模式可能与某些 VPN 冲突。
+不能用镜像模式的情况（旧版 Windows / 与某些 VPN 冲突），回退到方案 A 的端口转发。
 
 ---
 
@@ -613,4 +610,4 @@ export HF_HUB_ENABLE_HF_TRANSFER=1
 
 ---
 
-*最后更新: 2026-05-25*
+*文档最后更新: 2026-05-27*

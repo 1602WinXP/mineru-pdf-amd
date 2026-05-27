@@ -9,22 +9,22 @@
 **换模型不是只换文件那么简单。** 一个 MinerU 版本配套了一套固定的组件：
 
 ```
-MinerU 3.1.15
-  ├── mineru-vl-utils 0.2.8    ← VLM 模型加载/推理工具库
-  ├── VLM 模型 2604-1.2B       ← 模型权重（结构和 vl-utils 耦合）
+MinerU 3.2.0（当前 PyPI 最新版）
+  ├── mineru-vl-utils 1.0.x    ← VLM 模型加载/推理工具库
+  ├── VLM 模型 2605-1.2B       ← 模型权重（结构和 vl-utils 耦合）
   └── Pipeline 模型 Kit-1.0    ← OCR/版面模型
 ```
 
-2026 年 5 月 21 日官方发布了新 VLM 模型 `MinerU2.5-Pro-2605-1.2B`，同时 `mineru-vl-utils` 从 0.2.8 跳到 **1.0.0**，主版本号变更通常意味着接口/架构调整。
+2026 年 5 月 21 日官方发布了新 VLM 模型 `MinerU2.5-Pro-2605-1.2B`，同时 `mineru-vl-utils` 从 0.2.8 跳到 **1.0.x**（主版本号变更，接口与旧模型不兼容）。5 月 26 日 MinerU 3.2.0 上 PyPI，把这两个新组件一并装上。
 
 这意味着：
 
 | 你想做的事 | 可行吗 | 原因 |
 |-----------|--------|------|
-| 只下载新模型文件 | ❌ | 模型名硬编码在 `enum_class.py` 里，MinerU 不会去找它 |
-| 只改 `enum_class.py` 里的模型名 | ❌ | 旧 `vl-utils 0.2.8` 大概率无法加载新模型 |
+| 只下载新模型文件 | ❌ | 模型名硬编码在 `enum_class.py` 里，旧 MinerU 不会去找它 |
+| 只改 `enum_class.py` 里的模型名 | ❌ | 旧 `vl-utils 0.2.8` 无法加载新模型（接口已变） |
 | 只升级 `vl-utils` 到 1.0.0 | ❌ | 新 vl-utils 可能依赖新版本 MinerU |
-| 等 MinerU 发布新版本再整体升级 | ✅ | 官方会同步更新模型引用 + vl-utils + 其他适配 |
+| 升级 MinerU 整体（带新模型 + 新 vl-utils） | ✅ | 这是官方期望的升级方式 |
 
 **正确的模型更新方式是等待 MinerU 发新版，然后按 [MinerU本地更新指南.md](MinerU本地更新指南.md) 整体升级。**
 
@@ -36,10 +36,10 @@ MinerU 使用两套模型，分别托管在两个 HuggingFace 仓库：
 
 | 模型 | HuggingFace 仓库 | 大小 | 作用 |
 |------|-----------------|------|------|
-| **VLM 模型** | `opendatalab/MinerU2.5-Pro-2604-1.2B` | ~2.3GB | 视觉语言模型，决定解析精度 |
+| **VLM 模型** | `opendatalab/MinerU2.5-Pro-2605-1.2B` | ~2.3GB | 视觉语言模型，决定解析精度 |
 | **Pipeline 模型** | `opendatalab/PDF-Extract-Kit-1.0` | 仓库总量约 15GB；MinerU 实际只拉取所需子模块（约 1GB 左右） | 版面分析 / OCR / 公式 / 表格识别 |
 
-> VLM 模型名字里的 `2604` 表示 2026 年 4 月版本。官方发新模型时会改这个编号。
+> VLM 模型名字里的 `2605` 表示 2026 年 5 月版本。官方发新模型时会改这个编号。
 
 ---
 
@@ -59,7 +59,7 @@ MinerU 使用两套模型，分别托管在两个 HuggingFace 仓库：
 
 ```bash
 # VLM 模型
-ls ~/.cache/huggingface/hub/models--opendatalab--MinerU2.5-Pro-2604-1.2B/snapshots/
+ls ~/.cache/huggingface/hub/models--opendatalab--MinerU2.5-Pro-2605-1.2B/snapshots/
 
 # Pipeline 模型
 ls ~/.cache/huggingface/hub/models--opendatalab--PDF-Extract-Kit-1.0/snapshots/
@@ -148,7 +148,7 @@ python -c "
 from huggingface_hub import snapshot_download
 # 下载特定 commit 的模型（去 HuggingFace 页面查看 commit hash）
 snapshot_download(
-    'opendatalab/MinerU2.5-Pro-2604-1.2B',
+    'opendatalab/MinerU2.5-Pro-2605-1.2B',
     revision='<commit_hash>',
     cache_dir='~/.cache/huggingface/hub/'
 )
@@ -165,7 +165,7 @@ snapshot_download(
 
 **步骤 1**：在 Windows 上下载
 
-- VLM 模型：https://huggingface.co/opendatalab/MinerU2.5-Pro-2604-1.2B/tree/main
+- VLM 模型：https://huggingface.co/opendatalab/MinerU2.5-Pro-2605-1.2B/tree/main
 - Pipeline 模型：https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main
 - 或者用 ModelScope 镜像（国内更快）：https://modelscope.cn/organization/OpenDataLab
 
@@ -176,7 +176,7 @@ snapshot_download(
 mkdir -p ~/models_local
 
 # Windows 的 C 盘在 /mnt/c/，假设下载到了 Desktop
-cp -r /mnt/c/Users/<用户名>/Desktop/MinerU2.5-Pro-2604-1.2B ~/models_local/
+cp -r /mnt/c/Users/<用户名>/Desktop/MinerU2.5-Pro-2605-1.2B ~/models_local/
 cp -r /mnt/c/Users/<用户名>/Desktop/PDF-Extract-Kit-1.0 ~/models_local/
 ```
 
@@ -190,7 +190,7 @@ pip install modelscope
 
 python -c "
 from modelscope import snapshot_download
-snapshot_download('OpenDataLab/MinerU2.5-Pro-2604-1.2B', cache_dir='~/.cache/modelscope/hub/')
+snapshot_download('OpenDataLab/MinerU2.5-Pro-2605-1.2B', cache_dir='~/.cache/modelscope/hub/')
 snapshot_download('OpenDataLab/PDF-Extract-Kit-1.0', cache_dir='~/.cache/modelscope/hub/')
 "
 
@@ -206,14 +206,14 @@ export MINERU_MODEL_SOURCE=modelscope
 # 用 huggingface-hub 下载到本地目录
 pip install huggingface-hub
 
-huggingface-cli download opendatalab/MinerU2.5-Pro-2604-1.2B \
-    --local-dir ./MinerU2.5-Pro-2604-1.2B
+huggingface-cli download opendatalab/MinerU2.5-Pro-2605-1.2B \
+    --local-dir ./MinerU2.5-Pro-2605-1.2B
 
 huggingface-cli download opendatalab/PDF-Extract-Kit-1.0 \
     --local-dir ./PDF-Extract-Kit-1.0
 
 # 打包
-tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
+tar -czf mineru_models.tar.gz MinerU2.5-Pro-2605-1.2B PDF-Extract-Kit-1.0
 ```
 
 把 `mineru_models.tar.gz` 传到离线机器，解压后配置本地模型路径（见第六节）。
@@ -229,7 +229,7 @@ tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
 ```json
 {
     "models-dir": {
-        "vlm": "~/models_local/MinerU2.5-Pro-2604-1.2B",
+        "vlm": "~/models_local/MinerU2.5-Pro-2605-1.2B",
         "pipeline": "~/models_local/PDF-Extract-Kit-1.0"
     }
 }
@@ -239,7 +239,7 @@ tar -czf mineru_models.tar.gz MinerU2.5-Pro-2604-1.2B PDF-Extract-Kit-1.0
 
 ```
 ~/models_local/
-├── MinerU2.5-Pro-2604-1.2B/    ← VLM 模型文件（config.json, model.safetensors 等）
+├── MinerU2.5-Pro-2605-1.2B/    ← VLM 模型文件（config.json, model.safetensors 等）
 │   ├── config.json
 │   ├── model-00001-of-00002.safetensors
 │   ├── model-00002-of-00002.safetensors
@@ -265,7 +265,7 @@ python -c "
 from mineru.utils.config_reader import get_local_models_dir
 print(get_local_models_dir())
 "
-# 输出: {'vlm': '~/models_local/MinerU2.5-Pro-2604-1.2B', ...}
+# 输出: {'vlm': '~/models_local/MinerU2.5-Pro-2605-1.2B', ...}
 
 # 正常运行
 mineru -p input.pdf -o output -b hybrid-auto-engine
@@ -295,18 +295,19 @@ rm -rf ~/.cache/huggingface/hub/
 
 ## 八、模型版本对应关系
 
-| MinerU 版本 | vl-utils 版本 | VLM 模型 | Pipeline 模型 |
-|------------|--------------|-------------|--------------|
-| 3.1.15（当前） | 0.2.8 | `MinerU2.5-Pro-2604-1.2B` | `PDF-Extract-Kit-1.0` |
-| 下一个版本（推测） | 1.0.0+ | `MinerU2.5-Pro-2605-1.2B`（2026-05-21 发布） | 可能更新 |
+| MinerU 版本 | vl-utils 版本 | VLM 模型 | Pipeline 模型 | 发布日期 |
+|------------|--------------|-------------|--------------|---------|
+| 3.1.15 | 0.2.8 | `MinerU2.5-Pro-2604-1.2B` | `PDF-Extract-Kit-1.0` | 2026-05-19 |
+| **3.2.0（当前 PyPI 最新版）** | **1.0.x** | **`MinerU2.5-Pro-2605-1.2B`** | `PDF-Extract-Kit-1.0` | 2026-05-26 |
 
 > 2604 = 2026 年 4 月版，2605 = 2026 年 5 月版。官方大约每月更新一次 VLM 模型。
 
-查看当前 MinerU 代码中锁定的模型版本：
+查看当前 MinerU 代码中锁定的模型版本（路径 A 是 python3.13，路径 B 是 python3.12）：
 
 ```bash
+PYVER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 grep -r "MinerU2.5\|PDF-Extract-Kit" \
-    ~/mineru_stable/.venv/lib/python3.13/site-packages/mineru/utils/enum_class.py
+    ~/mineru_stable/.venv/lib/python${PYVER}/site-packages/mineru/utils/enum_class.py
 ```
 
 查看当前 vl-utils 版本：
@@ -319,7 +320,7 @@ grep -r "MinerU2.5\|PDF-Extract-Kit" \
 
 ## 九、模型文件说明
 
-### VLM 模型文件 (MinerU2.5-Pro-2604-1.2B)
+### VLM 模型文件 (MinerU2.5-Pro-2605-1.2B)
 
 | 文件 | 说明 |
 |------|------|
@@ -348,7 +349,7 @@ grep -r "MinerU2.5\|PDF-Extract-Kit" \
 
 ### Q: 更新 MinerU 后模型需要重新下载吗？
 
-看情况。如果表里的模型名称（如 `MinerU2.5-Pro-2604-1.2B`）没变，旧缓存可以直接用。如果 Release Notes 写了模型更新（名字变了），新模型会自动下载，旧的可手动删除。
+看情况。如果表里的模型名称（如 `MinerU2.5-Pro-2605-1.2B`）没变，旧缓存可以直接用。如果 Release Notes 写了模型更新（名字变了），新模型会自动下载，旧的可手动删除。
 
 ### Q: 如何同时保留新旧两版模型？
 
@@ -372,8 +373,8 @@ mkdir -p ~/shared_models
 mv ~/.cache/huggingface/hub/models--opendatalab--MinerU2.5-Pro-* ~/shared_models/
 
 # 创建符号链接
-ln -s ~/shared_models/models--opendatalab--MinerU2.5-Pro-2604-1.2B \
-      ~/.cache/huggingface/hub/models--opendatalab--MinerU2.5-Pro-2604-1.2B
+ln -s ~/shared_models/models--opendatalab--MinerU2.5-Pro-2605-1.2B \
+      ~/.cache/huggingface/hub/models--opendatalab--MinerU2.5-Pro-2605-1.2B
 ```
 
 ### Q: 模型下载一半断了怎么办？
@@ -382,4 +383,4 @@ HF 自动支持断点续传——直接重新运行 MinerU 即可，会从断点
 
 ---
 
-*最后更新: 2026-05-25*
+*文档最后更新: 2026-05-27*
